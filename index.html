@@ -1,0 +1,558 @@
+<!doctype html>
+<html lang="kk">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Шақырту • Қорап</title>
+
+  <style>
+    :root{
+      --bg1:#0b0f19;
+      --bg2:#141a2e;
+      --shadow: 0 25px 70px rgba(0,0,0,.55);
+
+      --paper:#ffffff;
+      --paper2:#f3f4f6;
+      --ink:#111827;
+      --muted:#6b7280;
+
+      --gift:#ffffff;
+      --gift2:#eef2ff;
+
+      --ribbon1:#7c3aed;
+      --ribbon2:#ec4899;
+
+      --radius: 28px;
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-family: system-ui, -apple-system, "SF Pro Display", "SF Pro Text", Segoe UI, Roboto, Arial, sans-serif;
+      background:
+        radial-gradient(900px 600px at 30% 10%, rgba(124,58,237,.45), transparent 70%),
+        radial-gradient(900px 600px at 70% 90%, rgba(34,197,94,.35), transparent 70%),
+        linear-gradient(160deg, var(--bg1), var(--bg2));
+      padding: 24px;
+      color:#fff;
+    }
+
+    .stage{
+      width: 980px;
+      max-width: 96vw;
+      display:grid;
+      place-items:center;
+      gap: 14px;
+    }
+
+    .hint{
+      opacity:.8;
+      font-weight:700;
+      letter-spacing:.5px;
+      font-size:14px;
+      text-align:center;
+    }
+
+    /* ====== Сахна ====== */
+    .scene{
+      width: min(860px, 96vw);
+      height: 650px;
+      position: relative;
+      display:grid;
+      place-items:center;
+      perspective: 1200px;
+    }
+
+    /* ====== Қағаз (шақырту) ====== */
+    .card{
+      position:absolute;
+      width: min(760px, 95vw);
+      height: 560px;
+      border-radius: 34px;
+      background: linear-gradient(180deg, var(--paper), #fbfbfd);
+      box-shadow: 0 30px 90px rgba(0,0,0,.45);
+      border: 1px solid rgba(17,24,39,.08);
+      overflow:hidden;
+
+      transform: translateY(140px) scale(.92);
+      opacity: 0;
+      pointer-events:none;
+
+      transition:
+        transform 1.05s cubic-bezier(.2,.95,.2,1),
+        opacity .55s ease;
+    }
+
+    .open .card{
+      transform: translateY(-120px) scale(1);
+      opacity: 1;
+      pointer-events:auto;
+      transition-delay: .15s;
+    }
+
+    .cardInner{
+      padding: 18px;
+      height: 100%;
+      display:flex;
+      flex-direction:column;
+      gap: 14px;
+      color: var(--ink);
+    }
+
+    /* ====== ҰЗЫН ЛЕНТА стиль ====== */
+    .ribbonLong{
+      width: 100%;
+      border-radius: 24px;
+      padding: 14px 18px;
+      background: linear-gradient(90deg, rgba(124,58,237,.12), rgba(236,72,153,.10));
+      border: 1px solid rgba(124,58,237,.16);
+      box-shadow: 0 18px 55px rgba(0,0,0,.08);
+      position: relative;
+      overflow:hidden;
+    }
+
+    .ribbonLong::before{
+      content:"";
+      position:absolute;
+      top:-50px;
+      left:-50px;
+      width:200px;
+      height:200px;
+      background: radial-gradient(circle, rgba(124,58,237,.25), transparent 70%);
+      filter: blur(8px);
+    }
+
+    .ribbonLong::after{
+      content:"";
+      position:absolute;
+      bottom:-60px;
+      right:-60px;
+      width:220px;
+      height:220px;
+      background: radial-gradient(circle, rgba(236,72,153,.20), transparent 70%);
+      filter: blur(10px);
+    }
+
+    .ribbonTitle{
+      font-size: 22px;
+      font-weight: 1000;
+      margin:0 0 6px;
+      letter-spacing:.3px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .ribbonText{
+      margin:0;
+      font-size: 15px;
+      line-height: 1.5;
+      color: rgba(17,24,39,.78);
+      position: relative;
+      z-index: 2;
+      font-weight: 700;
+    }
+
+    /* ====== Лента: Күні/уақыты/мекен ====== */
+    .detailsRibbon{
+      display:grid;
+      gap: 10px;
+    }
+
+    .rowRibbon{
+      border-radius: 22px;
+      padding: 12px 16px;
+      background: linear-gradient(90deg, rgba(124,58,237,.10), rgba(236,72,153,.08));
+      border: 1px solid rgba(17,24,39,.08);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+    }
+
+    .label{
+      font-size: 12px;
+      font-weight: 1000;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: rgba(17,24,39,.55);
+    }
+
+    .value{
+      font-size: 14px;
+      font-weight: 1000;
+      color: rgba(17,24,39,.92);
+      text-align:right;
+    }
+
+    /* ====== iOS стиль таймер ====== */
+    .iosTimer{
+      border-radius: 26px;
+      padding: 14px 14px 16px;
+      background: rgba(17,24,39,0.06);
+      border: 1px solid rgba(17,24,39,0.08);
+      box-shadow: 0 14px 40px rgba(0,0,0,.10);
+    }
+
+    .iosTop{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      margin-bottom: 10px;
+    }
+
+    .iosTitle{
+      font-size: 12px;
+      font-weight: 1000;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: rgba(17,24,39,.55);
+    }
+
+    .pill{
+      font-size: 12px;
+      font-weight: 1000;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(124,58,237,.12);
+      color: rgba(124,58,237, .95);
+      border: 1px solid rgba(124,58,237,.18);
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+
+    .box{
+      border-radius: 18px;
+      padding: 12px 10px;
+      background: rgba(255,255,255,.78);
+      border: 1px solid rgba(17,24,39,.08);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.45);
+      text-align:center;
+    }
+
+    .num{
+      font-size: 28px;
+      font-weight: 1000;
+      line-height: 1;
+      color: #0b1220;
+    }
+
+    .lbl{
+      margin-top: 6px;
+      font-size: 11px;
+      font-weight: 1000;
+      letter-spacing: .9px;
+      color: rgba(17,24,39,.55);
+    }
+
+    /* ====== Google Map лента ====== */
+    .mapRibbon{
+      border-radius: 26px;
+      padding: 14px;
+      background: linear-gradient(90deg, rgba(34,197,94,.12), rgba(124,58,237,.10));
+      border: 1px solid rgba(17,24,39,.08);
+      box-shadow: 0 14px 40px rgba(0,0,0,.08);
+    }
+
+    .mapRibbon a{
+      display:block;
+      text-decoration:none;
+      color: rgba(17,24,39,.95);
+      font-weight: 1000;
+      font-size: 15px;
+      padding: 14px;
+      border-radius: 22px;
+      background: rgba(255,255,255,.75);
+      border: 1px solid rgba(17,24,39,.08);
+      text-align:center;
+      transition: .2s ease;
+    }
+
+    .mapRibbon a:hover{
+      transform: scale(1.02);
+    }
+
+    /* ====== Сыйлық қорап ====== */
+    .giftWrap{
+      position:absolute;
+      bottom: 42px;
+      width: 420px;
+      max-width: 92vw;
+      height: 260px;
+      transform-style: preserve-3d;
+      display:grid;
+      place-items:center;
+      cursor:pointer;
+      user-select:none;
+      transition: opacity .5s ease, transform .5s ease;
+    }
+
+    /* Қорап жоғалу */
+    .open .giftWrap{
+      opacity: 0;
+      transform: translateY(80px) scale(.7);
+      pointer-events:none;
+    }
+
+    .gift{
+      position: relative;
+      width: 100%;
+      height: 100%;
+      border-radius: 28px;
+      background: linear-gradient(180deg, var(--gift), var(--gift2));
+      box-shadow: var(--shadow);
+      border: 1px solid rgba(255,255,255,.35);
+      overflow: hidden;
+    }
+
+    .lid{
+      position:absolute;
+      left: -2%;
+      right: -2%;
+      top: -18px;
+      height: 110px;
+      border-radius: 30px;
+      background: linear-gradient(180deg, #ffffff, #eef2ff);
+      border: 1px solid rgba(17,24,39,.08);
+      box-shadow: 0 18px 40px rgba(0,0,0,.18);
+      transform-origin: center bottom;
+      transform: rotateX(0deg);
+      transition: transform .85s cubic-bezier(.2,.9,.2,1);
+      z-index: 4;
+    }
+
+    .ribbonV, .ribbonH{
+      position:absolute;
+      background: linear-gradient(180deg, var(--ribbon1), var(--ribbon2));
+      z-index: 3;
+      filter: drop-shadow(0 10px 18px rgba(124,58,237,.25));
+    }
+    .ribbonV{ width: 54px; top:0; bottom:0; left: 50%; transform: translateX(-50%); }
+    .ribbonH{ height: 54px; left:0; right:0; top: 42%; transform: translateY(-50%); }
+
+    .bow{
+      position:absolute;
+      top: 38px;
+      left:50%;
+      transform: translateX(-50%);
+      width: 110px;
+      height: 70px;
+      z-index: 5;
+      transition: transform .85s cubic-bezier(.2,.9,.2,1);
+    }
+
+    .bow::before, .bow::after{
+      content:"";
+      position:absolute;
+      top: 0;
+      width: 58px;
+      height: 48px;
+      border-radius: 18px 28px 18px 28px;
+      background: linear-gradient(180deg, var(--ribbon1), var(--ribbon2));
+      filter: drop-shadow(0 10px 18px rgba(124,58,237,.25));
+    }
+    .bow::before{ left:0; transform: rotate(-18deg); }
+    .bow::after{ right:0; transform: rotate(18deg); }
+
+    .knot{
+      position:absolute;
+      left:50%;
+      top: 18px;
+      transform: translateX(-50%);
+      width: 26px;
+      height: 26px;
+      border-radius: 10px;
+      background: linear-gradient(180deg, var(--ribbon1), var(--ribbon2));
+      z-index: 6;
+    }
+
+    .giftText{
+      position:absolute;
+      bottom: 18px;
+      left: 0; right:0;
+      text-align:center;
+      color: rgba(17,24,39,.55);
+      font-weight: 1000;
+      letter-spacing: .9px;
+      text-transform: uppercase;
+      font-size: 12px;
+      z-index: 2;
+    }
+
+    .mapBox{
+  width: 100%;
+  height: 220px;
+  border-radius: 26px;
+  overflow: hidden;
+  border: 1px solid rgba(17,24,39,.10);
+  box-shadow: 0 14px 40px rgba(0,0,0,.10);
+}
+.mapBox iframe{
+  width: 100%;
+  height: 100%;
+}
+
+
+    .open .lid{
+      transform: rotateX(70deg) translateY(-10px);
+    }
+    .open .bow{
+      transform: translateX(-50%) translateY(-14px) scale(1.02);
+    }
+
+    /* Телефон */
+    @media (max-width: 760px){
+      .scene{ height: 760px; }
+      .card{ height: 640px; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="stage">
+    <div class="hint">🎁 Қорапты бас — ішінен шақырту шығады</div>
+
+    <div class="scene" id="scene">
+
+      <!-- Шақырту қағазы -->
+      <div class="card">
+        <div class="cardInner">
+
+          <div class="ribbonLong">
+            <h1 class="ribbonTitle">Құрметті қонақ!</h1>
+            <p class="ribbonText">
+              Сізді ерекше қуанышымызға арналған мерекелік кешімізге шын жүректен шақырамыз.
+              Келіп, қуанышымызды бірге бөліссеңіз біз үшін үлкен мәртебе болады 🤍
+            </p>
+          </div>
+
+          <div class="detailsRibbon">
+            <div class="rowRibbon">
+              <div class="label">Күні</div>
+              <div class="value" id="eventDateText">20.03.2026</div>
+            </div>
+
+            <div class="rowRibbon">
+              <div class="label">Уақыты</div>
+              <div class="value" id="eventTimeText">18:00</div>
+            </div>
+
+            <div class="rowRibbon">
+              <div class="label">Мекенжай</div>
+              <div class="value">Осындай да осындай, 2-қабат</div>
+            </div>
+          </div>
+
+          <div class="iosTimer">
+            <div class="iosTop">
+              <div class="iosTitle">Іс-шараға дейін</div>
+              <div class="pill">iOS 26</div>
+            </div>
+
+            <div class="grid">
+              <div class="box"><div class="num" id="d">00</div><div class="lbl">КҮН</div></div>
+              <div class="box"><div class="num" id="h">00</div><div class="lbl">САҒАТ</div></div>
+              <div class="box"><div class="num" id="m">00</div><div class="lbl">МИНУТ</div></div>
+              <div class="box"><div class="num" id="s">00</div><div class="lbl">СЕКУНД</div></div>
+            </div>
+          </div>
+
+          <!-- Google map -->
+        <div class="mapBox">
+  <iframe
+    src="https://www.google.com/maps?q=44.9162778,65.4553056&z=16&output=embed"
+    width="100%"
+    height="220"
+    style="border:0;"
+    allowfullscreen=""
+    loading="lazy">
+  </iframe>
+</div>
+
+
+        </div>
+      </div>
+
+      <!-- Қорап -->
+      <div class="giftWrap" id="giftBtn">
+        <div class="gift">
+          <div class="lid"></div>
+          <div class="ribbonV"></div>
+          <div class="ribbonH"></div>
+
+          <div class="bow">
+            <div class="knot"></div>
+          </div>
+
+          <div class="giftText">ҚОРАПТЫ БАСЫП АШ</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    const eventDate = new Date("2026-03-20T18:00:00");
+
+    // Күні/уақыты жазу
+    const dd = String(eventDate.getDate()).padStart(2,"0");
+    const mm = String(eventDate.getMonth()+1).padStart(2,"0");
+    const yyyy = eventDate.getFullYear();
+    const hh = String(eventDate.getHours()).padStart(2,"0");
+    const mi = String(eventDate.getMinutes()).padStart(2,"0");
+
+    document.getElementById("eventDateText").textContent = `${dd}.${mm}.${yyyy}`;
+    document.getElementById("eventTimeText").textContent = `${hh}:${mi}`;
+
+    // Қорап басқанда ашылады
+    const scene = document.getElementById("scene");
+    const giftBtn = document.getElementById("giftBtn");
+
+    giftBtn.addEventListener("click", () => {
+      scene.classList.add("open"); // бір рет ашылады
+    });
+
+    // Таймер
+    const dEl = document.getElementById("d");
+    const hEl = document.getElementById("h");
+    const mEl = document.getElementById("m");
+    const sEl = document.getElementById("s");
+
+    const pad = (n) => String(n).padStart(2,"0");
+
+    function tick(){
+      const now = new Date();
+      let diff = eventDate - now;
+
+      if(diff <= 0){
+        dEl.textContent = "00";
+        hEl.textContent = "00";
+        mEl.textContent = "00";
+        sEl.textContent = "00";
+        return;
+      }
+
+      const total = Math.floor(diff/1000);
+      const days = Math.floor(total/86400);
+      const hours = Math.floor((total%86400)/3600);
+      const mins = Math.floor((total%3600)/60);
+      const secs = total%60;
+
+      dEl.textContent = pad(days);
+      hEl.textContent = pad(hours);
+      mEl.textContent = pad(mins);
+      sEl.textContent = pad(secs);
+    }
+
+    tick();
+    setInterval(tick, 1000);
+  </script>
+</body>
+</html>
